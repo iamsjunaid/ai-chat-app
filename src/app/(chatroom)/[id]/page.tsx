@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
-import { addMessage, Message } from "@/features/messages/messagesSlice";
+import { addMessage, prependMessages, Message } from "@/features/messages/messagesSlice";
 import { v4 as uuidv4 } from "uuid";
 import { useParams } from "next/navigation";
 
@@ -10,18 +10,27 @@ function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+const PAGE_SIZE = 20;
+
 export default function ChatroomPage() {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
-  const messages = useSelector((state: RootState) => state.messages.messages.filter(m => m.chatroomId === id));
+  const allMessages = useSelector((state: RootState) => state.messages.messages.filter(m => m.chatroomId === id));
   const [input, setInput] = useState("");
   const [aiTyping, setAiTyping] = useState(false);
+  const [page, setPage] = useState(1);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatTopRef = useRef<HTMLDivElement>(null);
+
+  // Paginated messages (latest PAGE_SIZE * page)
+  const paginatedMessages = allMessages.slice(-PAGE_SIZE * page);
+  const hasMore = allMessages.length > paginatedMessages.length;
 
   // Auto-scroll to latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, aiTyping]);
+  }, [paginatedMessages.length, aiTyping]);
 
   // Send user message and simulate AI reply
   const sendMessage = async (e: React.FormEvent) => {
@@ -51,15 +60,56 @@ export default function ChatroomPage() {
     }, 1200 + Math.random() * 1000);
   };
 
+  // Simulate loading older messages
+  const loadOlderMessages = () => {
+    setLoadingOlder(true);
+    setTimeout(() => {
+      // Simulate dummy older messages
+      const dummy: Message[] = Array.from({ length: PAGE_SIZE }, (_, i) => ({
+        id: uuidv4(),
+        chatroomId: id,
+        sender: i % 2 === 0 ? "user" : "ai",
+        content: i % 2 === 0 ? `Older user message #${i + 1 + PAGE_SIZE * (page - 1)}` : `Older Gemini message #${i + 1 + PAGE_SIZE * (page - 1)}`,
+        timestamp: Date.now() - (PAGE_SIZE * page - i) * 60000,
+      }));
+      dispatch(prependMessages(dummy));
+      setPage(p => p + 1);
+      setLoadingOlder(false);
+    }, 900);
+  };
+
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4">
       <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow p-6 min-h-[500px] flex flex-col">
         <h1 className="text-2xl font-bold mb-6 text-center">Chatroom</h1>
         <div className="flex-1 overflow-y-auto mb-4 px-1" style={{ maxHeight: 400 }}>
-          {messages.length === 0 && (
+          <div ref={chatTopRef} />
+          {hasMore && (
+            <div className="flex justify-center mb-2">
+              <button
+                onClick={loadOlderMessages}
+                className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                disabled={loadingOlder}
+              >
+                {loadingOlder ? (
+                  <span className="flex items-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></span> Loading...</span>
+                ) : (
+                  "Load older messages"
+                )}
+              </button>
+            </div>
+          )}
+          {loadingOlder && (
+            <div className="flex flex-col gap-2 mb-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-8 w-2/3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto" />
+              ))}
+            </div>
+          )}
+          {paginatedMessages.length === 0 && !loadingOlder && (
             <div className="text-center text-gray-400 py-8">No messages yet. Say hello!</div>
           )}
-          {messages.map((msg) => (
+          {paginatedMessages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} mb-2`}>
               <div className={`rounded-lg px-4 py-2 max-w-xs break-words ${msg.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"}`}>
                 <div>{msg.content}</div>
