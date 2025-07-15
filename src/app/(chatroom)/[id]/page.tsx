@@ -20,6 +20,7 @@ export default function ChatroomPage() {
   const [aiTyping, setAiTyping] = useState(false);
   const [page, setPage] = useState(1);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [image, setImage] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatTopRef = useRef<HTMLDivElement>(null);
 
@@ -32,19 +33,21 @@ export default function ChatroomPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [paginatedMessages.length, aiTyping]);
 
-  // Send user message and simulate AI reply
+  // Send user message and/or image, simulate AI reply
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() && !image) return;
     const userMsg: Message = {
       id: uuidv4(),
       chatroomId: id,
       sender: "user",
       content: input,
       timestamp: Date.now(),
+      image: image || undefined,
     };
     dispatch(addMessage(userMsg));
     setInput("");
+    setImage(null);
     setAiTyping(true);
     // Simulate AI thinking delay (throttled)
     setTimeout(() => {
@@ -77,6 +80,21 @@ export default function ChatroomPage() {
       setLoadingOlder(false);
     }, 900);
   };
+
+  // Handle image selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setImage(ev.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Remove selected image
+  const removeImage = () => setImage(null);
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -112,6 +130,9 @@ export default function ChatroomPage() {
           {paginatedMessages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} mb-2`}>
               <div className={`rounded-lg px-4 py-2 max-w-xs break-words ${msg.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"}`}>
+                {msg.image && (
+                  <img src={msg.image} alt="uploaded" className="mb-2 max-w-[180px] max-h-[180px] rounded shadow" />
+                )}
                 <div>{msg.content}</div>
                 <div className="text-xs text-gray-300 dark:text-gray-400 mt-1 text-right">{formatTime(msg.timestamp)}</div>
               </div>
@@ -126,23 +147,41 @@ export default function ChatroomPage() {
           )}
           <div ref={chatEndRef} />
         </div>
-        <form onSubmit={sendMessage} className="flex gap-2 mt-auto">
-          <input
-            type="text"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            className="flex-1 p-2 border rounded focus:outline-none focus:ring"
-            placeholder="Type your message..."
-            disabled={aiTyping}
-            maxLength={500}
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-            disabled={aiTyping || !input.trim()}
-          >
-            Send
-          </button>
+        <form onSubmit={sendMessage} className="flex flex-col gap-2 mt-auto">
+          {image && (
+            <div className="flex items-center gap-2 mb-2">
+              <img src={image} alt="preview" className="w-16 h-16 object-cover rounded shadow" />
+              <button type="button" onClick={removeImage} className="text-red-500 hover:underline text-sm">Remove</button>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <label className="flex items-center cursor-pointer px-2 py-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+                disabled={aiTyping}
+              />
+              <span role="img" aria-label="Upload image">🖼️</span>
+            </label>
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              className="flex-1 p-2 border rounded focus:outline-none focus:ring"
+              placeholder="Type your message..."
+              disabled={aiTyping}
+              maxLength={500}
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              disabled={aiTyping || (!input.trim() && !image)}
+            >
+              Send
+            </button>
+          </div>
         </form>
       </div>
     </main>
