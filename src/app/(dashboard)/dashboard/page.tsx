@@ -9,6 +9,7 @@ import { addChatroom, deleteChatroom, setChatrooms, Chatroom } from "@/features/
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const schema = z.object({
   title: z.string().min(2, "Title is too short").max(32, "Title is too long"),
@@ -164,11 +165,17 @@ export default function DashboardPage() {
             <li className="py-8 text-center text-gray-500">No chatrooms found.</li>
           ) : (
             filtered.map((room) => (
-              <li key={room.id} className="flex items-center justify-between py-4">
-                <span className="font-medium">{room.title}</span>
+              <li key={room.id} className="flex items-center justify-between py-4 group">
+                <Link
+                  href={`/chatroom/${room.id}`}
+                  className="flex-1 font-medium hover:underline focus:underline outline-none transition text-left cursor-pointer group-hover:text-blue-600 group-focus:text-blue-600"
+                  tabIndex={0}
+                >
+                  {room.title}
+                </Link>
                 <button
                   onClick={() => onDelete(room.id)}
-                  className="text-red-500 hover:text-red-700 px-3 py-1 rounded transition border border-red-200 dark:border-red-700"
+                  className="text-red-500 hover:text-red-700 px-3 py-1 rounded transition border border-red-200 dark:border-red-700 ml-2"
                 >
                   Delete
                 </button>
