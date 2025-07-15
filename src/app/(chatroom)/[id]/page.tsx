@@ -5,6 +5,7 @@ import { RootState } from "@/store";
 import { addMessage, prependMessages, Message } from "@/features/messages/messagesSlice";
 import { v4 as uuidv4 } from "uuid";
 import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
 
 function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -21,6 +22,7 @@ export default function ChatroomPage() {
   const [page, setPage] = useState(1);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [image, setImage] = useState<string | null>(null);
+  const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatTopRef = useRef<HTMLDivElement>(null);
 
@@ -96,6 +98,20 @@ export default function ChatroomPage() {
   // Remove selected image
   const removeImage = () => setImage(null);
 
+  // Copy message content (and image URL if present) to clipboard
+  const handleCopy = async (msg: Message) => {
+    let text = msg.content;
+    if (msg.image) {
+      text = msg.content ? `${msg.content}\n${msg.image}` : msg.image;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard!");
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4">
       <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow p-6 min-h-[500px] flex flex-col">
@@ -128,13 +144,27 @@ export default function ChatroomPage() {
             <div className="text-center text-gray-400 py-8">No messages yet. Say hello!</div>
           )}
           {paginatedMessages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} mb-2`}>
-              <div className={`rounded-lg px-4 py-2 max-w-xs break-words ${msg.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"}`}>
+            <div
+              key={msg.id}
+              className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} mb-2 group relative`}
+              onMouseEnter={() => setHoveredMsg(msg.id)}
+              onMouseLeave={() => setHoveredMsg(null)}
+            >
+              <div className={`rounded-lg px-4 py-2 max-w-xs break-words ${msg.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"} relative`}>
                 {msg.image && (
                   <img src={msg.image} alt="uploaded" className="mb-2 max-w-[180px] max-h-[180px] rounded shadow" />
                 )}
                 <div>{msg.content}</div>
                 <div className="text-xs text-gray-300 dark:text-gray-400 mt-1 text-right">{formatTime(msg.timestamp)}</div>
+                {hoveredMsg === msg.id && (
+                  <button
+                    onClick={() => handleCopy(msg)}
+                    className="absolute top-1 right-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded p-1 text-xs shadow hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                    aria-label="Copy message"
+                  >
+                    📋
+                  </button>
+                )}
               </div>
             </div>
           ))}
