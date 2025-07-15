@@ -8,6 +8,7 @@ import { RootState } from "@/store";
 import { addChatroom, deleteChatroom, setChatrooms, Chatroom } from "@/features/chatrooms/chatroomsSlice";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
+import { useRouter } from "next/navigation";
 
 const schema = z.object({
   title: z.string().min(2, "Title is too short").max(32, "Title is too long"),
@@ -20,10 +21,23 @@ const DARK_MODE_KEY = "darkMode";
 
 export default function DashboardPage() {
   const dispatch = useDispatch();
+  const router = useRouter();
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const chatrooms = useSelector((state: RootState) => state.chatrooms.chatrooms);
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState<Chatroom[]>(chatrooms);
   const [darkMode, setDarkMode] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Route protection
+  useEffect(() => {
+    setCheckingAuth(true);
+    if (!isAuthenticated) {
+      router.replace("/login");
+    } else {
+      setCheckingAuth(false);
+    }
+  }, [isAuthenticated, router]);
 
   // Load chatrooms from localStorage on mount
   useEffect(() => {
@@ -97,6 +111,17 @@ export default function DashboardPage() {
     dispatch(deleteChatroom(id));
     toast.success("Chatroom deleted!");
   };
+
+  if (checkingAuth) {
+    return (
+      <main className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex items-center justify-center min-h-[300px]">
+          <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-2"></span>
+          <span className="text-lg">Checking authentication...</span>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4">
