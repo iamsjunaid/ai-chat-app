@@ -12,7 +12,9 @@ import { Country } from "@/features/auth/types";
 
 const schema = z.object({
   country: z.string().min(1, "Country is required"),
-  phone: z.string().min(6, "Phone is too short").max(15, "Phone is too long"),
+  phone: z.string().length(10, { message: "Phone must be 10 digits" }).refine((val) => !isNaN(Number(val)), {
+    message: "Phone must be a number",
+  }),
 });
 
 type FormData = z.infer<typeof schema>;
