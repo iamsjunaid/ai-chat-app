@@ -50,6 +50,34 @@ To access the dashboard:
 
 The app is live at: [https://ai-chat-app-w0y8.onrender.com](https://ai-chat-app-w0y8.onrender.com)
 
+## Folder & Component Structure
+
+- `src/app/` — Next.js app directory (routes, layouts, providers)
+  - `(auth)/` — Authentication pages (login, OTP)
+  - `(dashboard)/` — Dashboard page
+  - `(chatroom)/` — Chatroom pages
+- `src/features/` — Redux slices for auth, chatrooms, and messages
+- `src/store/` — Redux store configuration
+- `src/components/` — Reusable UI components (e.g., CountrySelector)
+- `src/lib/` — Utility functions and API helpers
+- `src/styles/` — Tailwind CSS configuration and global styles
+
+## Implementation Details
+
+### Throttling
+- **Search in Dashboard:** The chatroom search input uses a debounced effect (`setTimeout` in a `useEffect`) to throttle filtering, reducing unnecessary renders and improving performance.
+
+### Pagination & Infinite Scroll
+- **Chatroom Messages:** Messages in a chatroom are paginated. The UI displays the latest messages and allows loading older messages in batches (pagination). Infinite scroll is simulated by a "Load older messages" button, which prepends older messages to the list.
+
+### Form Validation
+- **Login, OTP, and Chatroom Creation:** All forms use [React Hook Form](https://react-hook-form.com/) with [Zod](https://zod.dev/) for schema-based validation. Errors are displayed inline for a smooth user experience.
+
+## Screenshots
+![Login Page](screenshots/login.png)
+![Dashboard](screenshots/dashboard.png)
+![Chatroom](screenshots/chatroom.png)
+
 ## Project Structure
 
 - `src/app/` — Next.js app directory (pages, layouts, providers)
