@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
-import { addMessage, prependMessages, Message } from "@/features/messages/messagesSlice";
+import { addMessage, prependMessages, Message, selectMessagesByChatroomId } from "@/features/messages/messagesSlice";
 import { v4 as uuidv4 } from "uuid";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -17,7 +17,7 @@ const PAGE_SIZE = 20;
 export default function ChatroomPage() {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch();
-  const allMessages = useSelector((state: RootState) => state.messages.messages.filter(m => m.chatroomId === id));
+  const allMessages = useSelector((state: RootState) => selectMessagesByChatroomId(state, id));
   const [input, setInput] = useState("");
   const [aiTyping, setAiTyping] = useState(false);
   const [page, setPage] = useState(1);
