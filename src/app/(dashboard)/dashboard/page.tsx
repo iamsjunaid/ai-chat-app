@@ -167,7 +167,7 @@ export default function DashboardPage() {
             filtered.map((room) => (
               <li key={room.id} className="flex items-center justify-between py-4 group">
                 <Link
-                  href={`/chatroom/${room.id}`}
+                  href={`/chatroom`}
                   className="flex-1 font-medium hover:underline focus:underline outline-none transition text-left cursor-pointer group-hover:text-blue-600 group-focus:text-blue-600"
                   tabIndex={0}
                 >
