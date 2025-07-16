@@ -52,7 +52,6 @@ export default function DashboardPage() {
     const dm = localStorage.getItem(DARK_MODE_KEY);
     if (dm === "true") {
       setDarkMode(true);
-      document.documentElement.classList.add("dark");
     }
   }, [dispatch]);
 
@@ -77,11 +76,6 @@ export default function DashboardPage() {
   const toggleDarkMode = useCallback(() => {
     setDarkMode((prev) => {
       const next = !prev;
-      if (next) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
       localStorage.setItem(DARK_MODE_KEY, next ? "true" : "false");
       return next;
     });
@@ -125,13 +119,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-4">
-      <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <main className={`flex flex-col items-center justify-center min-h-screen p-4 ${darkMode ? 'dark bg-gray-900' : 'bg-gray-100'}`}>
+      <div className={`w-full max-w-2xl rounded-lg shadow p-6 ${darkMode ? 'dark bg-gray-800' : 'bg-white'}`}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-          <h1 className="text-2xl font-bold text-center sm:text-left">Your Chatrooms</h1>
+          <h1 className={`text-2xl font-bold text-center sm:text-left ${darkMode ? 'text-white' : 'text-gray-800'}`}>Your Chatrooms</h1>
           <button
             onClick={toggleDarkMode}
-            className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+            className={`px-4 py-2 rounded border transition ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
             aria-label="Toggle dark mode"
           >
             {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
@@ -141,14 +135,14 @@ export default function DashboardPage() {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring"
+          className={`w-full mb-4 p-2 border rounded focus:outline-none focus:ring ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
           placeholder="Search chatrooms..."
         />
         <form onSubmit={handleSubmit(onCreate)} className="flex gap-2 mb-6">
           <input
             type="text"
             {...register("title")}
-            className="flex-1 p-2 border rounded focus:outline-none focus:ring"
+            className={`flex-1 p-2 border rounded focus:outline-none focus:ring ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
             placeholder="New chatroom title"
             maxLength={32}
           />
