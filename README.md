@@ -46,6 +46,10 @@ To access the dashboard:
 4. **Enter `123456` as the OTP** to complete authentication.
 5. You will be redirected to the dashboard upon successful verification.
 
+## Deployment
+
+The app is live at: [https://ai-chat-app-w0y8.onrender.com](https://ai-chat-app-w0y8.onrender.com)
+
 ## Project Structure
 
 - `src/app/` — Next.js app directory (pages, layouts, providers)
